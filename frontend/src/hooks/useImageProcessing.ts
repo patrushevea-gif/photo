@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { downloadBlob, postImage } from '../services/api';
+import { postImage } from '../services/api';
 
 export function useImageProcessing() {
   const [sourceFile, setSourceFile] = useState<File | null>(null);
@@ -16,16 +16,8 @@ export function useImageProcessing() {
     try {
       const blob = await postImage(endpoint, sourceFile, extra);
       setResultUrl(URL.createObjectURL(blob));
-      return blob;
     } finally {
       setLoading(false);
-    }
-  }
-
-  async function runExport(machine: string, dpi = '90') {
-    const blob = await runStage('/export/machine', { machine, dpi });
-    if (blob) {
-      downloadBlob(blob, `memorial_export_${machine}.bmp`);
     }
   }
 
@@ -36,6 +28,5 @@ export function useImageProcessing() {
     loading,
     setSourceFile,
     runStage,
-    runExport,
   };
 }

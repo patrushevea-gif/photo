@@ -8,8 +8,13 @@ import { UploadBox } from '../components/UploadBox';
 import { useImageProcessing } from '../hooks/useImageProcessing';
 
 export default function Page() {
-  const { sourceFile, sourceUrl, resultUrl, loading, setSourceFile, runStage, runExport } = useImageProcessing();
+  const { sourceFile, sourceUrl, resultUrl, loading, setSourceFile, runStage } = useImageProcessing();
   const [machine, setMachine] = useState('sauno');
+
+  async function downloadExport() {
+    if (!sourceFile) return;
+    await runStage('/export/machine', { machine, dpi: '90' });
+  }
 
   return (
     <main style={{ display: 'grid', gap: 16 }}>
@@ -24,7 +29,7 @@ export default function Page() {
       />
       <div style={{ display: 'flex', gap: 8 }}>
         <MachineSelector disabled={!sourceFile || loading} onSelect={setMachine} />
-        <button disabled={!sourceFile || loading} onClick={() => runExport(machine, '90')}>Экспорт</button>
+        <button disabled={!sourceFile || loading} onClick={downloadExport}>Экспорт</button>
       </div>
       <ImageBeforeAfter before={sourceUrl} after={resultUrl} />
     </main>
