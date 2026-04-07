@@ -1,42 +1,33 @@
-# Memorial Photo Pro — архитектура и стартовый код
+# Memorial Photo Pro
 
-Этот репозиторий содержит базовую серверную реализацию ключевого шага ТЗ: экспорта обработанного портрета в машиночитаемый формат под разные ритуальные станки.
+Полностью переработанный монорепозиторий B2B SaaS-сервиса для предпечатной подготовки фото под гравировальные станки.
 
-## Предлагаемая архитектура платформы
+## Структура
 
-- **Frontend (Next.js + Tailwind)**
-  - Левая панель: AI-инструменты (`Enhance`, `Remove BG`, `Outfit`).
-  - Центр: канвас с `Before/After`-слайдером.
-  - Правая панель: материалы камня + экспорт.
-  - Модалка выбора станка (`Sauno`, `Mirtels`, `Graphica`, `Almaz`, `Zubr`, `Laser-M`).
+- `frontend/` — Next.js приложение (загрузка изображения, этапы AI-пайплайна, выбор станка, экспорт).
+- `backend/` — FastAPI API с пайплайном обработки и промышленным `export/` модулем для станков.
 
-- **Backend API (FastAPI)**
-  - `POST /upload` — загрузка изображения.
-  - `POST /pipeline/restore-face` — CodeFormer/GFPGAN.
-  - `POST /pipeline/remove-bg` — SAM/Rembg.
-  - `POST /pipeline/outfit` — SD Inpainting.
-  - `POST /pipeline/mockup` — наложение текстуры камня.
-  - `POST /export/machine` — конвертация под станок (реализовано в модуле `backend/machine_export.py`).
+## Backend
 
-- **Workers/Queues**
-  - Долгие AI-операции выполняются в очереди (например, Celery + Redis).
+### Запуск
 
-- **Storage**
-  - Оригинал, промежуточные и экспортируемые версии файлов (S3-совместимое хранилище).
+```bash
+cd backend
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn app.main:app --reload
+```
 
-## Реализовано в коде
+### Основные endpoint'ы
 
-Функция `prepare_for_machine(image, machine_type)` в `backend/machine_export.py` делает:
-1. Resize к физическому размеру (по умолчанию 300×400 мм) с `dpi=90`.
-2. Grayscale + автоуровни контраста.
-3. Специальная логика по станку:
-   - `Sauno`: 8-bit grayscale BMP.
-   - `Almaz`: 1-bit BMP со `Stucki dithering`.
-   - `Laser-M`: инверсия + BMP.
-   - Дополнительно: `Mirtels`, `Graphica`, `Zubr`, `Bryullov`.
-4. Возвращает байты файла, расширение и MIME-тип.
+- `POST /pipeline/enhance`
+- `POST /pipeline/remove-bg`
+- `POST /pipeline/outfit`
+- `POST /pipeline/mockup`
+- `POST /export/machine`
 
-## Запуск тестов
+## Тесты
 
 ```bash
 python -m pytest -q
